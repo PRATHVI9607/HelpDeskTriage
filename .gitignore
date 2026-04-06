@@ -20,13 +20,13 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-.env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.sixth/
+# Virtual environments (NOT our env/ source directory!)
+/.env/
+/venv/
+/ENV/
+/env.bak/
+/venv.bak/
+/.sixth/
 
 # Environment variables
 .env
@@ -69,3 +69,6 @@ dmypy.json
 
 # Task management (keep task.md but ignore temp files)
 *.tmp
+
+# Explicitly include our source code directory
+!env/
