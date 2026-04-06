@@ -1,0 +1,26 @@
+# Python 3.11+ required
+
+# Core Framework
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# LLM Integration
+openai==1.12.0
+
+# Async Support
+httpx==0.26.0
+aiofiles==23.2.1
+
+# Testing
+pytest==8.0.0
+pytest-asyncio==0.23.5
+pytest-cov==4.1.0
+
+# Type Checking & Validation
+typing-extensions==4.9.0
+
+# Utilities
+python-dotenv==1.0.1
+numpy==1.26.4

@@ -1,0 +1,57 @@
+name: supportops-arena
+version: 1.0.0
+description: >
+  Enterprise IT incident triage RL environment. An AI agent acts as a 
+  Level-1/2 IT support operator, triaging incidents under partial 
+  observability with risk-weighted actions and an adaptive adversary.
+author: SupportOps Arena Team
+license: Apache-2.0
+tags:
+  - openenv
+  - rl-environment
+  - enterprise
+  - it-support
+  - partial-observability
+  - multi-task
+tasks:
+  - id: easy
+    name: Wi-Fi Connectivity Failure
+    description: Triage a single Wi-Fi failure ticket. 6 possible root causes.
+    max_steps: 10
+    score_range: [0.0, 1.0]
+    grader: programmatic
+    difficulty: easy
+  - id: medium
+    name: VPN Access Failure
+    description: Multi-cause VPN failure with one misleading log entry.
+    max_steps: 16
+    score_range: [0.0, 1.0]
+    grader: programmatic+llm
+    difficulty: medium
+  - id: hard
+    name: Cross-System Access Failure
+    description: Two tickets share a hidden SSO infrastructure root cause.
+    max_steps: 24
+    score_range: [0.0, 1.0]
+    grader: programmatic+llm+adversarial
+    difficulty: hard
+observation_type: structured_json
+action_type: discrete_enum
+action_count: 15
+reward_type: dense_shaped
+reward_range: [-0.40, 1.00]
+grader: programmatic+llm+adversarial
+deployment:
+  type: huggingface_spaces
+  space_sdk: docker
+  port: 7860
+docker: true
+baseline_agent: included
+api_server:
+  type: fastapi
+  base_url: /
+  endpoints:
+    reset: POST /reset
+    step: POST /step
+    state: GET /state
+    health: GET /health
