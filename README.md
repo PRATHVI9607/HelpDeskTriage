@@ -1,3 +1,19 @@
+---
+title: SupportOps Arena
+emoji: 🎯
+colorFrom: blue
+colorTo: sky
+sdk: docker
+app_port: 7860
+tags:
+  - openenv
+  - reinforcement-learning
+  - it-support
+  - environment
+  - benchmark
+pinned: false
+---
+
 # 🎯 SupportOps Arena
 
 **Enterprise IT Incident Triage Reinforcement Learning Environment**

@@ -13,6 +13,8 @@ import sys
 import logging
 from datetime import datetime
 
+from openai import AsyncOpenAI
+
 # Read environment variables
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:7860")
 MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o-mini")
@@ -25,6 +27,32 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     stream=sys.stderr
 )
+
+
+def create_openai_client() -> AsyncOpenAI:
+    """
+    Create OpenAI-compatible async client from required environment variables.
+    HF_TOKEN is preferred per hackathon submission requirements.
+    """
+    api_key = HF_TOKEN or OPENAI_API_KEY or "local-baseline-no-key"
+    return AsyncOpenAI(api_key=api_key, base_url=API_BASE_URL)
+
+
+def validate_required_env() -> None:
+    """Warn on missing required submission env vars (stderr only)."""
+    missing = []
+    if not API_BASE_URL:
+        missing.append("API_BASE_URL")
+    if not MODEL_NAME:
+        missing.append("MODEL_NAME")
+    if not HF_TOKEN:
+        missing.append("HF_TOKEN")
+
+    if missing:
+        logging.warning(
+            "Missing required env vars for submission: %s",
+            ", ".join(missing)
+        )
 
 
 async def run_task(task_level: str, env, agent) -> dict:
@@ -109,6 +137,10 @@ async def run_task(task_level: str, env, agent) -> dict:
 async def main():
     """Main entry point for inference script."""
     try:
+        validate_required_env()
+        llm_client = create_openai_client()
+        _ = (llm_client, MODEL_NAME)
+
         # Import environment and agent
         from env.environment import SupportOpsArena
         from baseline.baseline_agent import BaselineAgent

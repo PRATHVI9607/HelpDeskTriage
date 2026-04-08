@@ -38,6 +38,12 @@ app = FastAPI(
     version="1.0.0"
 )
 
+STATIC_DIR = os.path.join("app", "static")
+INDEX_HTML_PATH = os.path.join(STATIC_DIR, "index.html")
+
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -113,7 +119,7 @@ def get_or_create_session(session_id: str | None = None) -> tuple[str, SupportOp
 async def root():
     """Serve dashboard UI."""
     try:
-        with open("app/static/index.html", "r") as f:
+        with open(INDEX_HTML_PATH, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(

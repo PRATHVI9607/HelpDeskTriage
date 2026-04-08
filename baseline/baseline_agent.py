@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from env.state import EnvObservation, NetworkStatus, VPNStatus, AuthStatus, ServiceHealth
-from env.actions import ActionType
+from env.actions import ActionType, get_diagnostic_actions
 from env.environment import SupportOpsArena
 
 logger = logging.getLogger(__name__)
@@ -38,6 +38,9 @@ class BaselineAgent:
         """
         self.seed = seed
         self._action_history: list[str] = []
+        self._diagnostic_action_names = {
+            action.value for action in get_diagnostic_actions()
+        }
     
     async def select_action(self, observation: EnvObservation) -> ActionType:
         """
@@ -110,7 +113,7 @@ class BaselineAgent:
         
         # Phase 4: Resolve or escalate
         # Check if we have enough evidence
-        diagnostic_count = len(self._action_history)
+        diagnostic_count = self._count_diagnostic_actions()
         evidence_threshold = max_steps * 0.6
         
         # If we've gathered enough evidence and applied a fix, resolve
@@ -145,18 +148,20 @@ class BaselineAgent:
         Returns:
             Remediation action or None if more diagnostics needed
         """
+        diagnostic_steps_taken = self._count_diagnostic_actions()
+
         # Auth issues → reset credentials
         if observation.auth_status in [
             AuthStatus.LOCKED,
             AuthStatus.EXPIRED,
             AuthStatus.MFA_FAIL
         ]:
-            if observation.diagnostic_steps_taken >= 2:
+            if diagnostic_steps_taken >= 2:
                 return ActionType.RESET_CREDENTIALS
         
         # Network/DNS issues → flush DNS or reconfigure
         if observation.network_status in [NetworkStatus.DEGRADED, NetworkStatus.DOWN]:
-            if observation.diagnostic_steps_taken >= 2:
+            if diagnostic_steps_taken >= 2:
                 # Check if it's likely DNS
                 dns_indicators = sum(
                     1 for log in observation.system_logs
@@ -169,7 +174,7 @@ class BaselineAgent:
         
         # VPN issues → reconfigure client
         if observation.vpn_status in [VPNStatus.FAILED, VPNStatus.TIMEOUT]:
-            if observation.diagnostic_steps_taken >= 2:
+            if diagnostic_steps_taken >= 2:
                 return ActionType.RECONFIGURE_CLIENT
         
         # Service issues → restart service (high risk, so be cautious)
@@ -179,11 +184,18 @@ class BaselineAgent:
         )
         
         if has_critical_service_down:
-            if observation.diagnostic_steps_taken >= 3:
+            if diagnostic_steps_taken >= 3:
                 return ActionType.RESTART_SERVICE
         
         # No clear remediation yet
         return None
+
+    def _count_diagnostic_actions(self) -> int:
+        """Count diagnostic actions taken in the current episode."""
+        return sum(
+            1 for action_name in self._action_history
+            if action_name in self._diagnostic_action_names
+        )
     
     async def run_episode(
         self,
